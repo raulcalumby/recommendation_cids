@@ -11,9 +11,9 @@ Este é um projeto de aprendizado de máquina que implementa um sistema de recom
 
 ## Configuração e Execução do Projeto
 1. Verifique se você tem o Python 3.x instalado no seu sistema.
-2. Instale as dependências necessárias executando o seguinte comando:
+2. Instale as dependências necessárias.
 3. Clone este repositório para a sua máquina local.
-4. Navegue até o diretório do projeto e execute o aplicativo Flask:
+4. Navegue até o diretório do projeto e execute o aplicativo Flask com: python3 main.py
 5. O aplicativo Flask deve estar sendo executado em `http://127.0.0.1:5000/`.
 6. Para fazer uma recomendação, envie uma solicitação GET para `http://127.0.0.1:5000/recommend_cids?categoria_input=SUA_CATEGORIA_DE_ENTRADA` usando o Postman ou um navegador da web.
 
