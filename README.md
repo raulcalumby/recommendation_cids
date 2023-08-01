@@ -17,6 +17,25 @@ Este é um projeto de aprendizado de máquina que implementa um sistema de recom
 5. O aplicativo Flask deve estar sendo executado em `http://127.0.0.1:5000/`.
 6. Para fazer uma recomendação, envie uma solicitação GET para `http://127.0.0.1:5000/recommend_cids?categoria_input=SUA_CATEGORIA_DE_ENTRADA` usando o Postman ou um navegador da web.
 
+## Exemplo de Resposta JSON
+Aqui está um exemplo de resposta do sistema após enviar uma solicitação para recomendação de CIDs:
+
+```json
+{
+    "cid_procurado": "A00",
+    "cids_recomendados": [
+        "A01",
+        "A02",
+        "A03",
+        "A04",
+        "A05",
+        "A06",
+        "A07",
+        "A08",
+        "A09"
+    ]
+}
+
 ## Contribuindo
 Aceitamos contribuições para melhorar este sistema de recomendação. Se você tiver sugestões, correções de bugs ou novos recursos para adicionar, sinta-se à vontade para enviar uma solicitação de pull.
 

@@ -6,8 +6,8 @@ import pandas as pd
 
 app = Flask(__name__)
 
-df_categorias = pd.read_csv('./CID-10-CATEGORIAS.CSV - CID-10-CATEGORIAS.CSV.csv', encoding='utf-8')
-df_grupos = pd.read_csv('./CID-10-GRUPOS.CSV - CID-10-GRUPOS.CSV.csv', encoding='utf-8')
+df_categorias = pd.read_csv('./data/CID-10-CATEGORIAS.CSV - CID-10-CATEGORIAS.CSV.csv', encoding='utf-8')
+df_grupos = pd.read_csv('./data/CID-10-GRUPOS.CSV - CID-10-GRUPOS.CSV.csv', encoding='utf-8')
 
 def encontrar_grupo(categoria):
     grupo = df_grupos[(df_grupos['CATINIC'] <= categoria) & (df_grupos['CATFIM'] >= categoria)]
