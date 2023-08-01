@@ -35,11 +35,6 @@ Aqui está um exemplo de resposta do sistema após enviar uma solicitação para
         "A09"
     ]
 }
-
-## Contribuindo
-Aceitamos contribuições para melhorar este sistema de recomendação. Se você tiver sugestões, correções de bugs ou novos recursos para adicionar, sinta-se à vontade para enviar uma solicitação de pull.
-
-## Licença
-Este projeto está licenciado sob a Licença MIT. Consulte o arquivo LICENSE para mais detalhes.
+```
 
 
