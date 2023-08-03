@@ -1,81 +1,77 @@
 from flask import Flask, request, jsonify
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import LabelEncoder
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 import pandas as pd
+import re
 
 app = Flask(__name__)
 
-df_categorias = pd.read_csv('./data/CID-10-CATEGORIAS.CSV - CID-10-CATEGORIAS.CSV.csv', encoding='utf-8')
-df_grupos = pd.read_csv('./data/CID-10-GRUPOS.CSV - CID-10-GRUPOS.CSV.csv', encoding='utf-8')
+df_categories = pd.read_csv('./data/CID-10-CATEGORIAS.CSV - CID-10-CATEGORIAS.CSV.csv', encoding='utf-8')
+df_groups = pd.read_csv('./data/CID-10-GRUPOS.CSV - CID-10-GRUPOS.CSV.csv', encoding='utf-8')
 
-def encontrar_grupo(categoria):
-    grupo = df_grupos[(df_grupos['CATINIC'] <= categoria) & (df_grupos['CATFIM'] >= categoria)]
-    if not grupo.empty:
-        return grupo['DESCRICAO'].values[0], grupo['CATFIM'].values[0]
+def find_group(category):
+    group = df_groups[(df_groups['CATINIC'] <= category) & (df_groups['CATFIM'] >= category)]
+    if not group.empty:
+        return group['DESCRICAO'].values[0], group['CATFIM'].values[0]
     else:
         return None, None
 
-tabela_relacao = df_categorias[['CAT', 'DESCRICAO']].copy()
-tabela_relacao['DESCRICAO_GRUPO'], tabela_relacao['CAT_FIM'] = zip(*tabela_relacao['CAT'].apply(encontrar_grupo))
-
+table_relation = df_categories[['CAT', 'DESCRICAO']].copy()
+table_relation['GROUP_DESCRIPTION'], table_relation['CAT_END'] = zip(*table_relation['CAT'].apply(find_group))
 
 label_encoder = LabelEncoder()
-tabela_train = tabela_relacao.copy()
-tabela_train['CAT'] = label_encoder.fit_transform(tabela_train['CAT'])
+table_train = table_relation.copy()
+table_train['CAT'] = label_encoder.fit_transform(table_train['CAT'])
 
-
-X = tabela_train[['CAT']]  
-y = tabela_train['DESCRICAO_GRUPO'] 
-
+X = table_train[['CAT']]
+y = table_train['GROUP_DESCRIPTION']
 
 model = RandomForestClassifier()
+model.fit(X, y)
 
+name_cat_to_cid = table_relation.set_index('DESCRICAO')['CAT'].to_dict()
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+def recommend_cids(input_category):
+    if isinstance(input_category, str):
+        if not is_valid_cid(input_category):
+            closest_match, confidence = process.extractOne(input_category, name_cat_to_cid.keys())
+            if confidence >= 80:
+                input_category = name_cat_to_cid[closest_match]
+            else:
+                return "Category not found", []
 
+    input_category_encoded = label_encoder.transform([input_category])[0]
+    predicted_group = model.predict([[input_category_encoded]])[0]
+    recommended_categories = table_train[table_train['GROUP_DESCRIPTION'] == predicted_group]
+    searched_cid = input_category_encoded
+    recommended_cids = recommended_categories[recommended_categories['CAT'] != searched_cid]['CAT'].values
+    searched_cid_original = label_encoder.inverse_transform([searched_cid])[0]
+    recommended_cids_original = label_encoder.inverse_transform(recommended_cids)
 
-model.fit(X_train, y_train)
+    return searched_cid_original, recommended_cids_original
 
-def recomendar_cids(categoria_input):
-
-    categoria_input_encoded = label_encoder.transform([categoria_input])[0]
-   
-
-    grupo_predito = model.predict([[categoria_input_encoded]])[0]
-    
-
-    categorias_recomendadas = tabela_train[tabela_train['DESCRICAO_GRUPO'] == grupo_predito]
-    
-
-    cid_procurado = categorias_recomendadas['CAT'].values[0]
-    
-    
-    cids_recomendados = categorias_recomendadas[categorias_recomendadas['CAT'] != cid_procurado]['CAT'].values
-    
-
-    cid_procurado_original = label_encoder.inverse_transform([cid_procurado])[0]
-    cids_recomendados_originais = label_encoder.inverse_transform(cids_recomendados)
-    
-    return cid_procurado_original, cids_recomendados_originais
-
+def is_valid_cid(code):
+    pattern = r'^[A-Z]\d{2}$'
+    return re.match(pattern, code) is not None
 
 @app.route('/')
 def index():
-	return 'Hello, Flask!'
+    return 'Hello, Flask!'
 
 @app.route('/recommend_cids')
 def recommend_cids_route():
-    categoria_input = request.args.get('categoria_input')
-    if categoria_input is None:
-        return jsonify({"error": "categoria_input parameter is missing."}), 400
+    input_category = request.args.get('input_category')
+    if input_category is None:
+        return jsonify({"error": "input_category parameter is missing."}), 400
 
-    cid_procurado, cids_recomendados = recomendar_cids(categoria_input)
+    searched_cid, recommended_cids = recommend_cids(input_category)
     response = {
-        "cid_procurado": cid_procurado,
-        "cids_recomendados": list(cids_recomendados)
+        "searched_cid": searched_cid,
+        "recommended_cids": list(recommended_cids)
     }
     return jsonify(response)
 
 if __name__ == '__main__':
-	app.run(debug=True)
+    app.run(debug=True)
