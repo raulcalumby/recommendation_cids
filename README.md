@@ -22,8 +22,8 @@ Este é um projeto de aprendizado de máquina que implementa um sistema de recom
 ## Exemplo de Resposta JSON
 Aqui está um exemplo de resposta do sistema após enviar uma solicitação para recomendação de CIDs:
 Busca:
-`http://127.0.0.1:5000/recommend_cids?categoria_input=A00`
-Retorno:
+`http://127.0.0.1:5000/recommend_cids?categoria_input=A00` ou
+`http://127.0.0.1:5000/recommend_cids?categoria_input=Cólera`
 ```json
 {
  "searched_cid": "A00",
