@@ -34,13 +34,20 @@ model.fit(X, y)
 name_cat_to_cid = table_relation.set_index('DESCRICAO')['CAT'].to_dict()
 
 def recommend_cids(input_category):
+    result = {
+        'cid_procurado': {},
+        'cid_recomendado': []
+    }
+
     if isinstance(input_category, str):
         if not is_valid_cid(input_category):
             closest_match, confidence = process.extractOne(input_category, name_cat_to_cid.keys())
-            if confidence >= 80:
+            if confidence >= 60:
                 input_category = name_cat_to_cid[closest_match]
             else:
-                return "Category not found", []
+                result['cid_procurado']['descricao'] = input_category
+                result['cid_procurado']['cid'] = 'Category not found'
+                return result
 
     input_category_encoded = label_encoder.transform([input_category])[0]
     predicted_group = model.predict([[input_category_encoded]])[0]
@@ -50,7 +57,17 @@ def recommend_cids(input_category):
     searched_cid_original = label_encoder.inverse_transform([searched_cid])[0]
     recommended_cids_original = label_encoder.inverse_transform(recommended_cids)
 
-    return searched_cid_original, recommended_cids_original
+    result['cid_procurado']['descricao'] = table_relation[table_relation['CAT'] == searched_cid_original]['DESCRICAO'].values[0]
+    result['cid_procurado']['cid'] = label_encoder.inverse_transform([searched_cid])[0]
+    
+    for cid in recommended_cids_original:
+        result['cid_recomendado'].append({
+            'descricao': table_relation[table_relation['CAT'] == cid]['DESCRICAO'].values[0],
+            'cid': cid
+        })
+
+    return result
+
 
 def is_valid_cid(code):
     pattern = r'^[A-Z]\d{2}$'
@@ -66,12 +83,13 @@ def recommend_cids_route():
     if input_category is None:
         return jsonify({"error": "input_category parameter is missing."}), 400
 
-    searched_cid, recommended_cids = recommend_cids(input_category)
+    result = recommend_cids(input_category)
     response = {
-        "searched_cid": searched_cid,
-        "recommended_cids": list(recommended_cids)
+        "searched_cid": result['cid_procurado'],
+        "recommended_cids": result['cid_recomendado']
     }
     return jsonify(response)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
